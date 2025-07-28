@@ -1,0 +1,1668 @@
+# 工作流开发指南
+## 1. 流程接口
+- 依赖
+根目录pom增加依赖管理
+```xml
+<dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.xinyuan</groupId>
+                <artifactId>eps-workflow-dependencies</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+</dependencyManagement>
+```
+依赖工作流接口服务和vo
+```xml
+				<dependency>
+						<groupId>com.xinyuan</groupId>
+            <artifactId>eps-workflow-facade</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.xinyuan</groupId>
+            <artifactId>eps-workflow-vo</artifactId>
+        </dependency>
+```
+
+- 注入
+```java
+@Autowired
+WorkFlowFacade workFlowFacade;
+```
+
+- 接口方法
+```java
+	 
+    /**
+     * 根据流程标识（key）或流程定义id发起流程
+     *
+     * @param processInstance 发起流程信息
+     * @return 发起任务执行人id
+     */
+    String execStart(ProcessInstance processInstance);
+
+    /**
+     * 发起流程并提交第一步
+     *
+     * @param processInstance 发起流程信息{key:""...}
+     * @return 发起人任务执行id
+     *
+     */
+    String execStartAndNext(ProcessInstance processInstance);
+
+    /**
+     * 提交待办
+     *
+     * @param submitTaskPVO 提交待办PVO
+     *                      id 任务待办id
+     *                      taskComment 任务意见
+     * @return 执行人ID
+     */
+    ReturnValue execNext(SubmitTaskPVO submitTaskPVO);
+
+    /**
+     * 退回待办
+     * @param backTaskPVO 退回待办信息
+     *                    processId 流程id
+     *                    BackInfo 退回信息
+     *                             executorid 当前任务执行待办id
+     *                             backComment 退回意见
+     *                             toTaskDefineSign 退回至任务标识（为空时默认退回上一步）
+     * @return
+     */
+    ReturnValue execBackTask(BackTaskPVO backTaskPVO);
+
+    /**
+     * 获取下一步信息
+     * @param idVO
+     * @return
+     */
+    ReturnValue<SubmitTaskRVO> execGetTaskSubmit(IdVO idVO);
+
+    /**
+     * 获取可退回信息
+     * @param idVO
+     * @return
+     */
+    ReturnValue<BackTaskRVO> getTaskBack(IdVO idVO);
+
+    /**
+     * 初始化流程 不初始化人员
+     *
+     * @param processInstance 发起流程信息{key:""...}
+     * @return 发起人任务执行id
+     *
+     */
+    String execStartAndWait(ProcessInstance processInstance);
+
+    /**
+     * 根据id获取流程定义
+     * @param id 流程定义id
+     * @return 流程定义
+     *
+     */
+    GetProcessDefineRVO getProcessDefine(String id);
+
+    /**
+     * 根据采购方式等扩展字段获取项目流程定义
+     * @param lcExtend 采购方式等扩展字段
+     * @return 流程定义id
+     *
+     */
+    String getLcdy(LcExtend lcExtend);
+
+    /**
+     * 根据采购方式等扩展字段获取项目流程定义列表
+     * @param lcExtend 采购方式等扩展字段
+     * @return 流程定义id
+     *
+     */
+    List<GetProcessDefineRVO> getProcessDefineList(LcExtend lcExtend);
+
+    /**
+     * 根据采购方式等扩展字段获取时效模板列表
+     * @param sxmbExtend 采购方式等扩展字段
+     * @return 流程定义id
+     *
+     */
+    List<GetWf_jdmbListRVO> getJdmbList(SxmbExtend sxmbExtend);
+
+    /**
+     * 清除流程数据
+     * @param processid 流程实例id
+     * @param bizid 业务id
+     * @return 清除结果
+     *
+     */
+    String execClean(String processid, String bizid);
+
+    /**
+     * 终止流程数据
+     * @param processid 流程实例id
+     * @param bizid 业务id
+     * @return 终止结果
+     *
+     */
+    String execStop(String processid, String bizid);
+
+    /**
+     * 终止流程数据
+     * @param processid 流程实例id
+     * @param bizid 业务id
+     * @param exceptList 排除审批流
+     * @return 终止结果
+     *
+     */
+    String execStop(String processid, String bizid, List<String> exceptList);
+
+    /**
+     * 结束流程数据
+     * @param processid 流程实例id
+     * @param bizid 业务id
+     * @return 结束结果
+     *
+     */
+    String execFinish(String processid, String bizid);
+
+    /**
+     * 更新流程实例
+     * @param wf_lcsl
+     * @return
+     *
+     */
+    String updateProcess(Wf_lcsl wf_lcsl);
+
+    /**
+     * 更新流程实例名称
+     * @return
+     *
+     */
+    String updateProcessName(String bizid, String processName);
+
+    /**
+     * 是否已发起过流程
+     * @param bizid
+     * @return
+     */
+    boolean isStarted(String bizid);
+
+    /**
+     * 是否已发起过流程
+     * @param processInstance
+     * @return
+     */
+    boolean isStarted(ProcessInstance processInstance);
+
+    /**
+     * 是否可以撤回任务
+     *
+     * @param biz 业务数据
+     * @return 是否可以撤回
+     *
+     */
+    boolean canRetract(Biz biz);
+
+    /**
+     * 撤回任务
+     *
+     * @param biz 业务数据
+     * @return 撤回结果
+     *
+     */
+    boolean execRetract(Biz biz);
+
+    /**
+     * 修改数据标签编辑状态
+     * @param id 数据标签id
+     * @param status 数据标签状态
+     * @return 是否执行修改
+     */
+    boolean saveDataTabStatus(String id, int status);
+
+    /**
+     * 发送催办
+     *
+     * @param biz 业务数据
+     */
+    void execSendUrge(Biz biz);
+
+    /**
+     * 发送催办
+     *
+     * @param executor 执行人数据
+     */
+    void execSendUrge(Executor executor);
+
+    /**
+     * 获取进度实例列表
+     *
+     * @param bizid 业务编号
+     * @return 进度实例列表
+     */
+    List<GetProgressInstanceListRVO> getProgressInstanceList(String bizid);
+
+    Map<String, Object> getBizData(String bizid, String pid);
+
+    void updateBizData(String bizid, String pid, BizDataVO bizDataVO);
+
+    /**
+     * 获取数据标签树
+     *
+     * @return 数据标签-流程类别-标签类别-数据标签四级结构
+     */
+    List<DataTabTree> getDateTabTreeList();
+
+    /**
+     * 中断流程
+     *
+     * @param processid 流程实例ID
+     * @param bizid 业务ID
+     * @return 终止结果
+     */
+    String execSuspendProcess(String processid, String bizid);
+
+    /**
+     * 恢复流程（中断）
+     *
+     * @param processid 流程实例ID
+     * @param bizid 业务ID
+     * @return 恢复结果
+     */
+    String execRecoveryProcess(String processid, String bizid);
+
+    /**
+     * 获取流程执行人
+     * @param biz 流程信息
+     *            bizid 业务id
+     *            tasksign 任务标识
+     * @return 执行人列表
+     */
+    List<Wf_zxr> getWf_zxrList(Biz biz);
+
+    /**
+     * 获取流程执行人
+     * @param biz 流程信息
+     *            bizid 业务id
+     *            tasksign 任务标识
+     * @return 执行人列表
+     */
+    List<Executor> getExecutorList(Biz biz);
+
+    /**
+     * 获取流程角色人员列表
+     *
+     * @param bz    流程角色标识
+     * @param jgbh  机构编号
+     * @return 流程角色人员列表
+     */
+    List<GetWf_role_userListRVO> getWf_role_userList(String bz, String jgbh);
+
+    /**
+     * 根据部门id获取流程角色人员列表
+     *
+     * @param bz    流程角色标识
+     * @param jgbh  机构编号
+     * @param bmid  部门编号
+     * @param jzbmid  兼职部门编号
+     * @return 流程角色人员列表
+     */
+    List<GetWf_role_userListRVO> getWf_role_userList(String bz, String jgbh, String bmid, String jzbmid);
+
+    /**
+     * 重新生成流程进行中任务执行人
+     * @param bizid 流程业务id
+     * @return
+     */
+    String updateActor(String bizid);
+
+    /**
+     * 重新发起流程
+     * @param biz 流程信息
+     *            bizid 业务id
+     *            tasksign 任务标识
+     */
+    void execRestartProcess(Biz biz);
+
+    /**
+     * 获取流程日志列表
+     *
+     * @param getBizPVO 获取业务数据PVO
+     * @return 流程日志列表
+     */
+    GetLogListRVO getLogList(GetBizPVO getBizPVO);
+
+    /**
+     * 根据流程标识和执行人类别标识获取任务
+     * @param processContext
+     *          组织id  orgid
+     *          流程标识  processSign
+     * @return Task
+     *      任务id
+     *      任务名称 name
+     *      任务标识 rwbz
+     *      执行人类别标识 actorTypeSign
+     */
+    List<Task> getTaskList(ProcessContext processContext);
+
+    /**
+     * 同步任务授权信息
+     * @param saveTaskAuthPVO
+     * @return
+     */
+    String execTaskAuth(SaveTaskAuthPVO saveTaskAuthPVO);
+
+    /**
+     * 根据id获取流程定义
+     * @param id 流程定义id
+     * @return 流程定义
+     *
+     */
+    Wf_lcdy getLcdy(String id);
+
+    /**
+     * 根据采购方式等扩展字段获取项目流程定义列表
+     * @param lcExtend 采购方式等扩展字段
+     * @return 流程定义id
+     *
+     */
+    List<Wf_lcdy> getLcdyList(LcExtend lcExtend);
+
+    /**
+     * 获取下一步执行人
+     * @param executor 当前执行人 executorid （wf_zxr.id）
+     * @return
+     */
+    List<Executor> getNextExecutorList(Executor executor);
+
+    /**
+     * 获取项目审批流
+     * @param biz
+     * @return
+     */
+    List<ProcessInstance> getApprovalProcessList(Biz biz);
+
+    void execCopyLog(Biz bizFrom, Biz bizTo);
+
+    /**
+     * 根据业务id或流程实例id和标签标识获取标签
+     * @param biz
+     *          pid   流程实例id
+     *          bizid 业务id
+     *          datatabsign 标签标识
+     * @return
+     */
+    DataTab getDataTab(Biz biz);
+
+    /**
+     * 获取流程实例列表
+     *
+     * @param processInstance 流程实体（业务编号、流程标识、流程状态、流程性质）
+     * @return 流程实例列表
+     */
+    List<GetProcessInstanceListRVO> getProcessInstanceList(ProcessInstance processInstance);
+
+    /**
+     * 判断流程是否结束
+     *
+     * @param processInstance 流程实体 (业务id, 流程状态-结束, 流程性质-主流程)
+     * @return 是否结束 true 结束
+     */
+    boolean isFinished(ProcessInstance processInstance);
+
+    /**
+     * 获取流程附件列表
+     *
+     * @param biz 业务信息 (taskid:当前所在任务id)
+     * @return 附件列表
+     */
+    List<GetProcessAttachmentListRVO> getProcessAttachmentList(Biz biz);
+
+    /**
+     * 上传流程附件信息
+     *
+     * @param uploadProcessAttachmentListPVO 附件信息
+     */
+    void uploadProcessAttachmentList(List<UploadProcessAttachmentListPVO> uploadProcessAttachmentListPVO);
+```
+
+## 2. 数据标签
+
+- 数据标签api
+
+**建议：** 包路径使用com.xinyuan.[子模块].api.**wfdatatab**
+**建议：** RequestMapping以app/**authentication**开头
+
+示例
+```java
+package com.xinyuan.tenderprocess.api.wfdatatab.project.announcement;
+
+/**
+ * 数据标签-公告
+ */
+@RequestMapping("app/authentication/tenderprocess/project/announcement")
+@RestController
+public interface AnnouncementApi {
+    /**
+     * 获取招标公告
+     * @param getTenderAnnouncementPVO biz和ggid
+     * @return GetTenderAnnouncementRVO
+     */
+    @PostMapping(value = "/get-tender-announcement")
+    ReturnValue<GetTenderAnnouncementRVO> getTenderAnnouncement(@RequestBody @Validated  GetTenderAnnouncementPVO getTenderAnnouncementPVO);
+    
+```
+
+- 接收参数使用GetBizPVO或自定义vo
+
+
+使用工作流默认vo
+```java
+/**
+ * 数据标签获取参数vo
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class GetBizPVO extends ParamVO {
+
+    /**
+     * 业务数据vo
+     */
+    private Biz biz;
+}
+```
+自定义vo
+```java
+/**
+ * 获取公告输入参数
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class GetTenderAnnouncementPVO extends ParamVO {
+    /**
+     * 流程标签biz
+     */
+    private Biz biz;
+    /**
+     * 公告id（独立标包，选中的xm_xmgg.id）
+     */
+    private String ggid;
+    /**
+     * 公告类别（1-采购公告 7-邀请函）
+     */
+    @NotNull
+    private Integer gglb;
+}
+```
+
+## 3. 任务执行人，流程变量，流程事件，数据标签前后台校验接口实现
+**建议：** 包路径使用com.xinyuan.[子模块].model.**wfimpl**.[流程标识].[actor,var,event,checker]
+**强制：** 数据库操作需注入service，不得继承BaseService
+**强制：** @Service("id")需与包路径一致
+**强制：** 事件实现方法必须返回ReturnValue，例：return ReturnValue.newSuccessInstance();
+
+- 任务执行人示例
+```java
+package com.xinyuan.tenderprocess.model.wfimpl.xm.actor;
+
+@Service("com.xinyuan.tenderprocess.model.wfimpl.xm.actor.ZbrActor")
+public class ZbrActor implements ActorGetter {
+
+    @Autowired
+    PublicProcessService publicProcessService;
+
+    @Autowired
+    private OrganizationFacade organizationFacade;
+
+    @Override
+    public List<Actor> get(ProcessContext processContext, Wf_zxrdy wf_zxrdy){
+        List<Actor> actorList = new ArrayList<>();
+        Xm_zbxm xm_zbxm = publicProcessService.get(new Xm_zbxm(processContext.getBizid()));
+        if(xm_zbxm!=null && xm_zbxm.getLxxmxh()!=null){
+            Xm_xmlxsp xm_xmlxsp=this.get(new Xm_xmlxsp(xm_zbxm.getLxxmxh()));
+            if(xm_xmlxsp!=null){
+                Actor actor = new Actor();
+                actor.setId(xm_xmlxsp.getSqr());
+                actor.setName(organizationFacade.getUserNameById(xm_xmlxsp.getSqr()));
+                actorList.add(actor);
+            }else{
+                Actor actor = new Actor();
+                actor.setId(xm_zbxm.getXmjbr());
+                actor.setName(organizationFacade.getUserNameById(xm_zbxm.getXmjbr()));
+                actorList.add(actor);
+            }
+        }else{
+            Actor actor = new Actor();
+            actor.setId(xm_zbxm.getXmjbr());
+            actor.setName(organizationFacade.getUserNameById(xm_zbxm.getXmjbr()));
+            actorList.add(actor);
+        }
+        return actorList;
+    }
+}
+```
+
+- 流程变量示例
+```java
+package com.xinyuan.tenderprocess.model.wfimpl.xm.var;
+
+/**
+ * 项目变量
+ */
+@Service("com.xinyuan.xm.model.wfimpl.xm.var.Xm_zbxmValueGetter")
+public class Xm_zbxmValueGetter implements ValueGetter {
+
+    @Autowired
+    PublicProcessService publicProcessService;
+
+    @Override
+    public Map<String, Object> get(ProcessContext processContext) {
+        String bizSql = "select * from xm_zbxm where id = :id";
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("id", processContext.getBizid());
+        return publicProcessService.get(bizSql, parameters);
+    }
+}
+```
+
+
+- 供应商流程任务状态变量示例
+```java
+package com.xinyuan.tenderprocess.model.wfimpl.supplierproject.statusvar;
+
+/**
+ * 供应商项目基本信息状态
+ */
+@Service("com.xinyuan.tenderprocess.model.wfimpl.supplierproject.statusvar.SupplierProjectBaseInfoStautsValueGetter")
+public class SupplierProjectBaseInfoStautsValueGetter implements ValueGetter {
+    @Override
+    public Map<String, Object> get(ProcessContext processContext) {
+        Map<String, Object> statusVar = new HashMap<>();
+        statusVar.put("status", Constants_wf.WF_RWSL_RWZT_FINISHED);
+        return statusVar;
+    }
+}
+```
+
+- 流程事件示例
+```java
+package com.xinyuan.tenderprocess.model.wfimpl.xm.event;
+
+/**
+ * <p>项目生成编号事件</p>
+ */
+@Service("com.xinyuan.xm.model.wfimpl.xm.event.XmscbhEvent")
+public class XmscbhEvent implements EventListener {
+
+    @Autowired
+    PublicProcessEventService publicProcessEventService;
+
+    @Override
+    public ReturnValue enter(ProcessContext processContext) {
+        return publicProcessEventService.execXmscbhEnter(processContext);
+    }
+
+    @Override
+    public ReturnValue leave(ProcessContext processContext) {
+        return ReturnValue.newSuccessInstance();
+    }
+
+    @Override
+    public ReturnValue back(ProcessContext processContext) {
+       return ReturnValue.newSuccessInstance();
+    }
+}
+```
+- 数据标签后台校验示例
+```java
+package com.xinyuan.tenderprocess.model.wfimpl.xm.checker;
+
+/**
+ * 基本信息数据校验
+ */
+@Service("com.xinyuan.tenderprocess.model.wfimpl.xm.checker.JbxxChecker")
+public class JbxxChecker implements DataTabChecker {
+
+    @Autowired
+    PublicProcessService publicProcessService;
+
+    @Override
+    public ReturnValue checkData(ProcessContext processContext) {
+        ReturnValue<List<SubmitTaskVerifyMessage>> returnValue = ReturnValue.newSuccessInstance();
+        List<SubmitTaskVerifyMessage> messageList = new ArrayList<>();
+        returnValue.setData(messageList);
+
+        String zbxmid = processContext.getBizid();
+
+        List<Xm_zbxm> xm_zbxmList=null;
+        if(StringUtils.isNotEmpty(zbxmid)) {
+            xm_zbxmList = publicProcessService.select(new Xm_zbxm(), " where id=:xmxh", MapBuilder.map("xmxh",zbxmid));
+        }
+        boolean allSubmit = false;
+        if (null != xm_zbxmList) {
+            Xm_zbxm xm_zbxm = xm_zbxmList.get(0);
+            Xm_zbxm_pz xm_zbxm_pz = publicProcessService.get(new Xm_zbxm_pz(xm_zbxm.getId()));
+            if(xm_zbxm_pz.getSfdlbb() != null && xm_zbxm_pz.getSfdlbb() == Constants_tenderprocess.YES) {
+                if(xm_zbxm.getCgys()!=null){
+                    allSubmit = true;
+                }
+            } else {
+                if( xm_zbxm.getCgys()!=null){
+                    allSubmit = true;
+                }
+            }
+        }
+        if (allSubmit) {
+            SubmitTaskVerifyMessage message = new SubmitTaskVerifyMessage("", Constants_wf.SUBMIT_TASK_VERIFY_STATE_SUCCESS);
+            messageList.add(message);
+            return returnValue;
+        } else {
+            SubmitTaskVerifyMessage message = new SubmitTaskVerifyMessage("基本信息未填写完成！", Constants_wf.SUBMIT_TASK_VERIFY_STATE_ERROR);
+            message.setName("自定义名称"); // 自定义名称会出现在提示语的冒号左侧，默认值是数据标签名称
+            messageList.add(message);
+            return returnValue;
+        }
+    }
+}
+```
+
+```java
+/**
+ * 招标公告数据校验
+ */
+@Service("com.xinyuan.tenderprocess.model.wfimpl.xm.checker.ZbggChecker")
+public class ZbggChecker implements DataTabChecker {
+
+    @Autowired
+    PublicProcessService publicProcessService;
+    @Autowired
+    BigColumnFacade bigColumnFacade;
+
+    @Override
+    public ReturnValue checkData(ProcessContext processContext) {
+        ReturnValue returnValue = ReturnValue.newSuccessInstance();
+        List<SubmitTaskVerifyMessage> messageList = new ArrayList<>();
+        returnValue.setData(messageList);
+        String zbxmid = processContext.getBizid();
+        List<Xm_xmgg> xm_xmggList = new ArrayList<>();
+        if(StringUtils.isNotEmpty(zbxmid)) {
+            Map<String,Object> map=new HashMap();
+            map.put("xmxh",zbxmid);
+            map.put("gglb_gg", Constants_tenderprocess.XM_XMGG_GGLB_CGGG);
+            xm_xmggList = this.publicProcessService.select(new Xm_xmgg(),"where xmid=:xmxh and gglb=:gglb_gg",map);
+            String errorText="";
+            //校验公告文件是否存在
+            for(Xm_xmgg xm_xmgg:xm_xmggList){
+                if(StringUtils.isBlank(xm_xmgg.getGgnrh())){
+                    errorText+="【"+xm_xmgg.getGgmc()+"】采购公告未选择模板或公告内容未保存！";
+                }else{
+                    GetBigColumnRVO getBigColumnRVO = bigColumnFacade.getBigColumn(xm_xmgg.getGgnrh());
+                    if(getBigColumnRVO == null || StringUtils.isEmpty(getBigColumnRVO.getZdz())){
+                        errorText+="【"+xm_xmgg.getGgmc()+"】采购公告未选择模板或公告内容未保存！";
+                    }
+                }
+            }
+            if(errorText.length()>0){
+                SubmitTaskVerifyMessage message = new SubmitTaskVerifyMessage(errorText, Constants_wf.SUBMIT_TASK_VERIFY_STATE_ERROR);
+                messageList.add(message);
+                return returnValue;
+            }
+            //校验是否审批通过
+            map.put("sptg", Constants_tenderprocess.XM_XMGG_SPZT_SPTG);
+            xm_xmggList = this.publicProcessService.select(new Xm_xmgg(),"where xmid=:xmxh and gglb=:gglb_gg and spzt=:sptg",map);
+        }
+        if(CollectionUtils.isEmpty(xm_xmggList)){
+            SubmitTaskVerifyMessage message = new SubmitTaskVerifyMessage("采购公告未编制完成！", Constants_wf.SUBMIT_TASK_VERIFY_STATE_ERROR);
+            messageList.add(message);
+            return returnValue;
+        }
+
+        // 成功后提示
+        SubmitTaskVerifyMessage message = new SubmitTaskVerifyMessage("供应商可以报名参与项目", Constants_wf.SUBMIT_TASK_VERIFY_STATE_REMIND);
+        messageList.add(message);
+        return returnValue;
+    }
+}
+```
+
+- 数据标签前端校验
+
+```html
+onMounted(() => {
+
+	//监听流程提交校验通知
+	notificationMoniter([ProjectNavigationDataTabDataUpdate, ProjectNavigationDataTabDataVerify], (messageName: string, param?: unknown) => {
+
+		//收到通知校验当前页面内容
+		if (messageName === ProjectNavigationDataTabDataVerify) {
+			checkData();
+		}
+	});
+}
+```
+
+## 4. 常用vo
+- 流程信息ProcessInstance
+```java
+package com.xinyuan.workflow.vo.pub;
+
+/**
+ * 流程实体
+ */
+public class ProcessInstance extends BaseVO {
+
+    /**
+     * 流程定义id (id和key选择一个)
+     */
+    private String id;
+
+    /**
+     * 流程标识 (id和key选择一个)
+     */
+    private String key;
+
+    /**
+     * 流程实例名称 (必填)
+     */
+    private String name;
+
+    /**
+     * 业务id (必填)
+     */
+    private String bizid;
+
+    /**
+     * 发起人id (必填)
+     */
+    private String userid;
+
+    /**
+     * 组织id (必填)
+     */
+    private String orgid;
+
+    /**
+     * 顶级组织ID (建议填写)
+     */
+    private String topOrgID;
+
+    /**
+     * 租户ID (建议填写)
+     */
+    private String tenantID;
+
+    /**
+     * 部门id (建议填写)
+     */
+    private String deptid;
+
+    /**
+     * 主流程任务实例id
+     */
+    private String taskInMain;
+
+    /**
+     * 业务信息
+     */
+    private String bizInfo;
+
+    /**
+     * 模板编号
+     */
+    private String mbbh;
+
+    /**
+     * 处理意见
+     */
+    private String taskComment;
+
+    /**
+     * 上一步执行人
+     */
+    private PreTaskActors preTaskActors;
+```
+
+- 流程上下文ProcessContext
+```java
+package com.xinyuan.workflow.vo.pub;
+
+/**
+ * 流程上下文
+ */
+public class ProcessContext implements Serializable {
+
+    public String id;
+    /**
+     * 业务编号
+     */
+    public String bizid;
+    /**
+     *组织id
+     */
+    public String orgid;
+    /**
+     *部门id
+     */
+    public String deptid;
+    /**
+     *流程发起人
+     */
+    public String initiator;
+    /**
+     * 执行人员id
+     */
+    public String executuser;
+    /**
+     * 当前登录人员id
+     */
+    public String userid;
+    /**
+     * 执行人ID
+     */
+    public String executorid;
+```
+
+- 业务信息Biz
+```java
+package com.xinyuan.workflow.vo.pub;
+
+/**
+ * 业务信息
+ */
+public class Biz implements Serializable {
+
+    /**
+     * 进行中
+     */
+    public static int STATUS_RUNNING = 2;
+
+    /**
+     * 已完成
+     */
+    public static int STATUS_FINISHED = 3;
+
+    /**
+     * 业务id，发起流程时传的业务id，如项目id，合同id，报名供应商id
+     */
+    private String bizid;
+
+    /**
+     * 流程实例id
+     */
+    private String pid;
+
+    /**
+     * 当前所在任务id
+     */
+    private String taskid;
+
+    /**
+     * 当前所在任务定义id
+     */
+    private String taskdefid;
+
+    /**
+     * 当前所在任务标识
+     */
+    private String tasksign;
+
+    /**
+     * 当前所在任务执行人id
+     */
+    private String executorid;
+
+    /**
+     * 当前数据标签id
+     */
+    private String datatabid;
+
+    /**
+     * 当前数据标签标识
+     */
+    private String datatabsign;
+
+    /**
+     * 当前数据标签性质(编辑|查看共用-0 编辑 -1 查看 -2)
+     */
+    private Integer datatabbqxz;
+
+    /**
+     * 当前任务执行状态
+     */
+    private Integer taskStatus;
+```
+
+- 获取流程附件列表RVO
+```java
+/**
+ * 获取流程附件列表RVO
+ */
+public class GetProcessAttachmentListRVO extends BaseVO implements TrtVo {
+
+    /**
+     * 编号
+     */
+    @Trt
+    private String id;
+
+    /**
+     * 流程实例编号[WF_LCSL].ID
+     */
+    @Trt
+    private String lcslid;
+
+    /**
+     * 业务编号
+     */
+    @Trt
+    private String ywid;
+
+    /**
+     * 任务实例编号[WF_RWSL].ID
+     */
+    @Trt
+    private String rwslid;
+
+    /**
+     * 任务定义编号[WF_RWDY].ID
+     */
+    @Trt
+    private String rwdyid;
+
+    /**
+     * 任务名称
+     */
+    private String rwmc;
+
+    /**
+     * 条件表达式
+     */
+    private String tjbds;
+
+    /**
+     * 是否通过  (常量 mapYesNo 0-否 1-是)
+     */
+    private transient Integer passSign;
+
+    /**
+     * 条件表达式说明
+     */
+    private String tjbdssm;
+
+    /**
+     * 附件标识
+     */
+    private String fjbs;
+
+    /**
+     * 附件名称
+     */
+    private String fjmc;
+
+    /**
+     * 附件描述
+     */
+    private String fjms;
+
+    /**
+     * 编辑方式 (常量 mapWF_RWDY_LCFJ_BJFS 1-在线编辑 2-附件上传)
+     */
+    private Integer bjfs;
+
+    /**
+     * 是否必填 (常量 mapYesNo 0-否 1-是)
+     */
+    private Integer sfbt;
+
+    /**
+     * 附件类型[逗号分隔]
+     */
+    private String fjlx;
+
+    /**
+     * 附件数量
+     */
+    private Integer fjsl;
+
+    /**
+     * 文档模板
+     */
+    private String wdmb;
+
+    /**
+     * 文档样例
+     */
+    private String wdyl;
+
+    /**
+     * 文档附件
+     */
+    private String wdfj;
+
+    /**
+     * 文档说明
+     */
+    private String wdsm;
+
+    /**
+     * 顺序号
+     */
+    private Integer seq;
+
+    /**
+     * 标志 (常量 mapWF_RWDY_LCFJ_FLAG 1-在用 2-停用)
+     */
+    private Integer flag;
+
+}
+```
+
+- 任务实例流程附件列表保存PVO
+```java
+package com.xinyuan.workflow.vo.pub;
+
+/**
+ * 任务实例流程附件列表保存PVO
+ */
+public class UploadProcessAttachmentListPVO extends ParamVO implements TrtVo {
+
+  /**
+   * 编号
+   */
+  @Trt
+  private String id;
+
+  /**
+   * 文档附件
+   */
+  private String wdfj;
+
+  /**
+   * 文档说明
+   */
+  private String wdsm;
+
+}
+```
+
+## 5. 工作流常见用法
+### 5.1 发起流程自动提交到下一步
+- 流程后台接口
+```java
+workFlowFacade.execStartAndNext(processInstance);
+```
+- 例
+```java
+
+    @Override
+    public ReturnValue<String> execStartProcess(SaveQuestionReplyPVO saveQuestionReplyPVO, Visit visit) {
+        Xm_zyts xm_zyts = dao.get(new Xm_zyts(saveQuestionReplyPVO.getId()));
+        // 判断流程是否已发起
+        if(xm_zyts.getSpzt() == null
+                || xm_zyts.getSpzt() == Constants_tenderprocess.XM_ZYTS_SPZT_CSH
+                || xm_zyts.getSpzt() == Constants_tenderprocess.XM_ZYTS_SPZT_SPTH) {
+            Xm_bmgys xm_bmgys = dao.get(new Xm_bmgys(xm_zyts.getBmgysid()));
+            Xm_zbxm xm_zbxm = dao.get(new Xm_zbxm(xm_bmgys.getXmid()));
+            List<WorkerVO> cgrWorkList = workgroupFacade.getWorkers(MapBuilder.create().put("businessNumber"
+                    , xm_zbxm.getId()).put("personnelType", Constants_tenderprocess.PUB_WORKER_PERSONNEL_TYPE_CGJBR).build());
+            String orgid = cgrWorkList.get(0).getOrgId();
+            // 组织流程发起数据
+            ProcessInstance processInstance = new ProcessInstance(null,
+                    Constants_tenderprocess.LCBS_ZYTSSLSP, xm_zbxm.getXmmc() + "[" + xm_zyts.getSxmc() + "]质疑投诉回复审批",
+                    saveQuestionReplyPVO.getId(), LoginUserHolder.getUserId(), orgid, null);
+            processInstance.setCgfs(xm_zbxm.getCgfs());
+
+            // 组织业务关联数据，流程审批界面title展示数据
+            List<BizDataVO> bizList = new ArrayList<>();
+            BizDataVO cgfsData = new BizDataVO(Constants_wf.WF_MAP_KEY_GLXMID, "项目", xm_zbxm.getId(), Constants_wf.BIZDATA_TYPE_HIDDEN, null);
+            bizList.add(cgfsData);
+            processInstance.setBizInfo(JacksonUtil.bean2json(bizList));
+
+            // 发起流程并提交到下一步
+            workFlowFacade.execStartAndNext(processInstance);
+            return ReturnValue.newSuccessInstance();
+        } else {
+            return ReturnValue.newErrorInstance("流程已发起！");
+        }
+    }
+```
+### 5.2 发起流程后弹出提交界面选人
+- 流程后台接口
+```java
+// 只发起流程
+workFlowFacade.execStart(processInstance);
+```
+- 例
+```java
+
+    @Override
+    public ReturnValue<String> execStartProcess(SaveQuestionReplyPVO saveQuestionReplyPVO, Visit visit) {
+        Xm_zyts xm_zyts = dao.get(new Xm_zyts(saveQuestionReplyPVO.getId()));
+        // 判断流程是否已发起
+        if(xm_zyts.getSpzt() == null
+                || xm_zyts.getSpzt() == Constants_tenderprocess.XM_ZYTS_SPZT_CSH
+                || xm_zyts.getSpzt() == Constants_tenderprocess.XM_ZYTS_SPZT_SPTH) {
+            Xm_bmgys xm_bmgys = dao.get(new Xm_bmgys(xm_zyts.getBmgysid()));
+            Xm_zbxm xm_zbxm = dao.get(new Xm_zbxm(xm_bmgys.getXmid()));
+            List<WorkerVO> cgrWorkList = workgroupFacade.getWorkers(MapBuilder.create().put("businessNumber"
+                    , xm_zbxm.getId()).put("personnelType", Constants_tenderprocess.PUB_WORKER_PERSONNEL_TYPE_CGJBR).build());
+            String orgid = cgrWorkList.get(0).getOrgId();
+            // 组织流程发起数据
+            ProcessInstance processInstance = new ProcessInstance(null,
+                    Constants_tenderprocess.LCBS_ZYTSSLSP, xm_zbxm.getXmmc() + "[" + xm_zyts.getSxmc() + "]质疑投诉回复审批",
+                    saveQuestionReplyPVO.getId(), LoginUserHolder.getUserId(), orgid, null);
+            processInstance.setCgfs(xm_zbxm.getCgfs());
+
+            // 组织业务关联数据，流程审批界面title展示数据
+            List<BizDataVO> bizList = new ArrayList<>();
+            BizDataVO cgfsData = new BizDataVO(Constants_wf.WF_MAP_KEY_GLXMID, "项目", xm_zbxm.getId(), Constants_wf.BIZDATA_TYPE_HIDDEN, null);
+            bizList.add(cgfsData);
+            processInstance.setBizInfo(JacksonUtil.bean2json(bizList));
+
+            // 发起流程并返回当前任务执行id
+            String executorid = workFlowFacade.execStart(processInstance);
+            ReturnValue returnValue = ReturnValue.newSuccessInstance();
+            returnValue.setData(executorid);
+            return returnValue;
+        } else {
+            return ReturnValue.newErrorInstance("流程已发起！");
+        }
+    }
+```
+- 前台弹出提交确认页面选人
+```html
+<!-- 需要传后台返回的当前任务执行id -->
+      <e-popup :showpopup="presentDialog.ShowSubmit" title="提交"
+               @close="presentDialog.ShowSubmit = false">
+          <template #body>
+              <e-flow-instance-submit v-if="presentDialog.ShowSubmit" :biz="{ executorid: presentDialog.executorid}"></e-flow-instance-submit>
+          </template>
+      </e-popup>
+```
+- 例
+```html
+	<!-- 底部按钮 begin -->
+	<el-affix position="bottom" :offset="0">
+		<div class="bt-group">
+			<e-button :isSubmit="isSubmit" :refresh="refresh" v-if="!presentState.readonly" type="primary"
+				@click="saveAction(formRef)"></e-button>
+			<e-button :isSubmit="isSubmit" :refresh="refresh" v-if="!presentState.readonly" type="primary"
+				@click="submitAction(formRef)" title="提交审批"></e-button>
+			<el-button type="primary" @click="closeAction()">{{ $t("System.Currency.Cancel") }}</el-button>
+		</div>
+	</el-affix>
+	<!-- 底部按钮 end -->
+<!-- 提交下一步选人 begin -->
+      <e-popup :showpopup="presentDialog.ShowSubmit" title="提交"
+               @close="presentDialog.ShowSubmit = false">
+          <template #body>
+              <e-flow-instance-submit v-if="presentDialog.ShowSubmit" :biz="{ executorid: presentDialog.executorid}"></e-flow-instance-submit>
+          </template>
+      </e-popup>
+      <!-- 提交下一步选人 end -->
+<script setup lang="ts">
+import {wfComponent, xyComponent} from '@searun/core';
+const { EProcessLog, EFlowInstanceSubmit } = wfComponent();
+  
+//弹窗
+const presentDialog = reactive({
+    title: '',
+    full: false,
+    executorid: '', //执行人id
+    ShowSubmit: false,
+})
+
+const submitAction = (formEl: FormInstance | undefined) => {
+	isSubmit.value = !isSubmit.value
+	if (formEl) {
+		formEl.validate((valid: boolean) => {
+			if (valid) {
+				presentState.xm_zyts.id = props.id;
+				ElMessageBox.confirm("确认提交当前信息吗？", {
+					confirmButtonText: t("System.Currency.Confirm"),
+					cancelButtonText: t("System.Currency.Cancel"),
+				}).then(async () => {
+					await start_process(presentState.xm_zyts).then((res) => {
+						ElMessage({
+							message: "提交成功",
+							type: "success"
+						});
+            // 后台返回的任务执行人id
+						presentDialog.executorid = res;
+						presentDialog.ShowSubmit = true;
+					});
+				});
+			} else {
+				refresh.value = !refresh.value
+				getErrorFocus(formRef)
+			}
+		});
+	}
+};
+</script>
+```
+
+- 注意事项
+
+**一般编辑界面使用业务状态控制提交按钮，该业务状态需要在第一步选人提交后的事件里修改，
+否则没选人的情况下关闭弹出窗口后就没机会重新打开选人界面了**
+
+### 5.3 打开待办，项目向导，项目监控界面
+- 从功能页面用业务id打开审核页面
+```html
+// 从功能页面用业务id打开审核页面
+const toApproval = (row: any) => {
+	let obj = {
+        query: {
+            bizid: row.id,
+        },
+        path: "EProcessApproval"
+    }
+    const key = setQueryEncodeData(obj);
+    globalStore.setUrlParams({ key: key });
+    const href = router.resolve({
+        path: '/Workflow/WorkflowNavigation',
+    });
+    window.open(href.href, '_self');
+}
+
+<!-- 流程审批查看 -->
+  <e-popup :showpopup="presentDialog.approvalReview" :dialog-full="presentDialog.full" size="large"
+    :title="presentDialog.title" :sfzdyfooter="true" custom-class="popup-bg"
+    @close="presentDialog.approvalReview = false">
+    <template v-if="presentDialog.approvalReview" #body>
+      <process-approval-review :bizid="presentDialog.bizid" :useMitt="useMitt" :loadDynamicComponent="loadDynamicComponent" />
+    </template>
+  </e-popup>
+```
+
+- 从功能页面用执行人id打开审核页面
+```html
+// 从功能页面用执行人id打开审核页面
+const toApproval = (executorid: string) => {
+	let obj = {
+        query: {
+            executorid: executorid,
+        },
+        path: "EProcessApproval"
+    }
+    const key = setQueryEncodeData(obj);
+    globalStore.setUrlParams({ key: key });
+    const href = router.resolve({
+        path: '/Workflow/WorkflowNavigation',
+    });
+    window.open(href.href, '_self');
+}
+
+// 功能页面刷新回调
+onMounted(() => {
+  notificationMoniter([RemindRefresh], (messageName: string, param?: any) => {
+    // 刷新回调
+  });
+})
+```
+- 打开项目向导/项目监控
+```vue
+ <!-- 项目向导 -->
+  <e-popup :showpopup="presentDialog.projectNavigation" :dialog-full="true" :title="presentDialog.title"
+    :sfzdyfooter="true" @close="presentDialog.projectNavigation = false">
+    <template #body v-if="presentDialog.projectNavigation">
+      <project-navigation :query="{ bizid: presentDialog.bizid }" :useMitt="useMitt" :loadDynamicComponent="loadDynamicComponent" />
+    </template>
+  </e-popup>
+  
+<!-- 项目监控 -->
+  <e-popup :showpopup="presentDialog.projectMonitor" :dialog-full="true" :title="presentDialog.title" :sfzdyfooter="true"
+    @close="presentDialog.projectMonitor = false">
+    <template #body v-if="presentDialog.projectMonitor">
+      <project-monitor :query="{ bizid: presentDialog.bizid }" :useMitt="useMitt" :loadDynamicComponent="loadDynamicComponent" />
+    </template>
+  </e-popup>
+```
+```js
+
+ <!-- 项目向导 -->
+const viewProjectNavigation = (projectId: string) => {
+	const { href } = router.resolve({ path: '/WindowOpen', query: { key: setQueryEncodeData({ query: { bizid: projectId }, path: 'EProjectNavigation' }) } });
+	window.open(href, projectId);
+};
+<!-- 通过标签标识定位标签 -->
+const viewProjectNavigation = (projectId: string) => {
+	const { href } = router.resolve({ path: '/WindowOpen', query: { key: setQueryEncodeData({ query: { bizid: projectId, bqbz: '标签标识' }, path: 'EProjectNavigation' }) } });
+	window.open(href, projectId);
+};
+<!-- 项目监控 -->
+const viewProjectMonitor = (projectId: string) => {
+	const { href } = router.resolve({ path: '/WindowOpen', query: { key: setQueryEncodeData({ query: { bizid: projectId }, path: 'EProjectMonitor' }) } });
+	window.open(href, projectId);
+};
+```
+- 增加权限
+```java
+query.value = { bizid: row.bizId, permission: Constants_wf.WF_RWDY_PERMISSION_TASK_VIEW_MYSELF }
+// 权限常量
+WF_RWDY_PERMISSION_TASK_SHOW_MYSELF:1,//显示本人任务
+WF_RWDY_PERMISSION_TASK_SHOW_ALL:2,//显示所有任务
+WF_RWDY_PERMISSION_TASK_VIEW_MYSELF:3,//查看本人任务
+WF_RWDY_PERMISSION_TASK_VIEW_FINISHED:4, //查看所有完成任务
+WF_RWDY_PERMISSION_TASK_VIEW_ALL:5,//查看所有业务
+```
+- 从待办进入非待办页面
+
+进入功能地址配置如下：
+```
+/Contract/ContractManagement/MyProcurementContract/ContractEdit/ContractEditMain?bizid=
+	
+/xm/sqgl/xmlx/cgfa/editXm_xmlxsp?id=
+```
+进入项目向导增加权限需配置如下：
+```
+EProjectNavigation?permission=3&bizid=
+```
+
+![提醒地址-项目向导.png](/02研发知识库}/流程/提醒地址-项目向导.png)
+![提醒地址配置项目向导.png](/02研发知识库}/流程/提醒地址配置项目向导.png)
+- 功能页面刷新回调
+```html
+// 功能页面刷新回调
+onMounted(() => {
+  notificationMoniter([RemindRefresh], (messageName: string, param?: any) => {
+    // 刷新回调
+  });
+})
+```
+- 供应商项目向导
+
+/pages/workflow/supplier_navigation?bizid=d252b842e4d04d26b6ca6e06da25bd97
+
+### 5.4 数据标签中进行流程操作
+```html
+// 数据标签中展示退回意见
+<e-back-tips :bizid="业务id"></e-back-tips>
+import { EBackTips } from "@searun/workflow";
+
+//项目向导,审批流，在数据标签中提交下一步
+emit('postNavigationMessage','NextTask') 
+
+//在数据标签中设置审批意见
+emits('postNavigationMessage', 'setApprovalOpinion','同意') 
+
+//审批流程，在数据标签中刷新主页
+emits('refreshProcess') 
+
+//审批流程，刷新提交界面
+emits('postNavigationMessage', 'refreshProcessApprovalInfo')  
+
+//项目向导，在数据标签中刷新主页
+emit('postNavigationMessage','RefreshNavigation') 
+
+//供应商项目向导，在数据标签中刷新主页
+emits('refresh') 
+```
+- 从父页面或路由上接受参数
+```
+//获取父页面props
+interface Props {
+  biz?: any
+  reqFormId?: string //采购申请单ID
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  biz: {}, //需求ID
+  reqFormId: '' //采购申请单ID
+})
+const bizid = ref('')
+
+
+// 获取采购申请单信息
+onMounted(() => {
+  if (props.reqFormId) {
+    FormApplyEditPopState.reqFormId = props.reqFormId
+  } else if (props.biz && props.biz.bizid) {
+    FormApplyEditPopState.reqFormId = props.biz.bizid
+    FormApplyEditPopState.isShowBackTips = true
+  }
+  getReqFormApplyData(FormApplyEditPopState.reqFormId)
+})
+//提交第一步选择人员  点击确认触发事件
+const processSubmitReceipt = () => {
+  if (props.reqFormId) {
+    ElMessage({
+      message: '发起流程成功！',
+      type: 'success'
+    })
+  }
+  emits('getTableDataList')
+  emits('close')
+}
+
+
+
+//流程提交伪代码
+execStartPurchaseWorkFlow({ id: FormApplyEditPopState.reqFormId }).then((res: any) => {
+							// 后台返回的任务执行人id
+							FormApplyEditPopState.executorid = res;
+							FormApplyEditPopState.ShowSubmit = true;
+						});
+```
+### 5.5 在后台进行流程流转操作
+- 获取进行中执行人 WorkFlowFacade.getWf_zxrList
+```java
+Biz biz = new Biz(); // 获取当前待办
+biz.setBizid("业务id");
+biz.setUserid("当前人员id");
+biz.setTaskStatus(Constants_wf.WF_RWSL_RWZT_RUNNING);
+List<Wf_zxr> wf_zxrList = WorkFlowFacade.getWf_zxrList(Biz biz);
+```
+- 提交 WorkFlowFacade.execNext
+```java
+Biz biz = new Biz(); // 同上，获取当前待办
+biz.setBizid("业务id");
+biz.setUserid("当前人员id");
+biz.setTaskStatus(Constants_wf.WF_RWSL_RWZT_RUNNING);
+List<Wf_zxr> wf_zxrList = WorkFlowFacade.getWf_zxrList(Biz biz);
+Wf_zxr wf_zxr = wf_zxrList.get(0);
+SubmitTaskPVO submitTaskPVO = new SubmitTaskPVO();
+submitTaskPVO.setId(wf_zxr.getId());
+submitTaskPVO.setTaskComment("审批意见");
+WorkFlowFacade.execNext(submitTaskPVO);
+```
+- 退回 WorkFlowFacade.execBackTask
+```java
+... ... // 同上，获取当前待办
+BackTaskPVO backTaskPVO = new BackTaskPVO();
+backTaskPVO.setProcessId(wf_zxr.getLcslid());
+BackInfo backInfo = new BackInfo();
+backInfo.setExecutorid(wf_zxr.getId());
+backInfo.setBackComment("退回意见");
+backInfo.setToTaskDefineSign(""); // 退回至任务标识（为空时默认退回上一步）
+backTaskPVO.setBackInfo(backInfo);
+WorkFlowFacade.execBackTask(backTaskPVO);
+```
+### 5.6 项目概览
+- 打开项目概览
+```html
+<el-dropdown-item @click="openProjectPreview(row)">项目预览</el-dropdown-item>
+
+const openProjectPreview = (row: any) => {
+  const key = setQueryEncodeData({ path:"EFlowInstanceProjectPreview",
+		query: { ywid: row.id, ywids: "1,2", cgfs:"" }})
+  globalStore.setUrlParams({ key })
+  const href = router.resolve({
+    path: '/Workflow/WorkflowNavigation'
+  });
+  window.open(href.href, '_self');
+}
+```
+### 5.7 项目审批待办跳转到项目向导
+项目审批一般是指在项目向导数据标签中发起的公告审批，招标文件审批等，
+此类审批被退回到起草时，起草待办需要跳转到项目向导对应公告编辑等标签重新起草提交流程
+需要在起草节点配置提醒地址为项目向导，并且指定bqbz参数确定跳转对应标签
+```
+EProjectNavigation?bqbz=ZBGG&bizid=
+```
+ZBGG为项目流程中公告编辑对应的标签标识
+
+在待办提醒功能中打开时，提醒地址后缀的参数都会被加密，需要将bqbz配置成不需要加密
+```
+{"trtset":{"bizid": true, "bqbz": false}}
+```
+如下图：
+![公告审批跳转到项目向导.png](/02研发知识库}/流程/公告审批跳转到项目向导.png)
+
+trtset部分会生成到提醒表
+```
+{"bizid": true, "bqbz": false}
+```
+如下图：
+![提醒对应url和参数.png](/02研发知识库}/流程/提醒对应url和参数.png)
+### 5.8 流程发送催办（加急）
+- 流程后台接口
+```java
+import com.xinyuan.workflow.vo.base.Biz;
+// 发送催办
+workFlowFacade.execSendUrge(Biz biz);
+```
+### 5.9项目向导 流程审批下一步 数据标签校验
+```
+// 流程加载数据标签时传值
+<component
+ :is="presentState.components[dataTab.id!]"
+ :biz="presentState.task.getBizPVO?.biz"
+ :data-tab="dataTab"
+ :readonly="!dataTab.canEdit"
+ :parameters="dataTab.parameters"
+ @print-func="printFunc"
+ :cgfs="presentState.cgfs"
+ :sfzgys="presentState.sfzgys"
+ @post-navigation-message="disposeReceivedMessage"
+ @refresh-process="disposeReceivedMessage('refreshProcessApprovalInfo')"
+ @change-phrases="changePhrases"></component>
+                  
+"ProjectNavigationMenuUpdate"; //菜单更新
+"ProjectNavigationDataTabDataUpdate"; //数据标签数据更新
+"ProjectNavigationDataTabDataNeedVerify"; //数据标签数据需要校验
+"ProjectNavigationDataTabDataVerify"; //数据标签数据校验
+"ProjectNavigationDataTabVerifySuccess"; //数据标签数据校验成功
+"ProjectNavigationDataTabVerifyFailure"; //数据标签数据校验失败
+```
+1.按需引入事件名称 
+```html
+import { ProjectNavigationDataTabDataUpdate,
+  ProjectNavigationDataTabDataVerify,
+  ProjectNavigationDataTabDataNeedVerify,
+  ProjectNavigationDataTabVerifySuccess,
+  ProjectNavigationDataTabVerifyFailure } from "@/enums/mittNotification";
+
+```
+2.该数据标签是否需要校验
+如果需要校验 在初始化时需要发送需要校验的事件
+  ```html
+// 数据标签页面接收值
+interface Props {
+  biz?: Biz //业务信息对象
+  readonly?: boolean
+  parameters?: string
+  cgfs: string //采购方式
+  sfzgys: number //是否资格预审
+  dataTab?: any
+  ...
+}
+const props = withDefaults(defineProps<Props>(), {
+  biz: () => createBiz(),
+  readonly: false,
+  parameters: '',
+  ...
+})
+
+onMounted(() => {
+  if(!props.readonly){
+postNotification(ProjectNavigationDataTabDataNeedVerify,props.dataTab.id)}
+}）
+
+```
+3.接收通知 当该数据标签需要在点击下一步进行校验时 需要在初始化时设置事件监听
+```html
+onMounted(() => {
+  if(!props.readonly) postNotification(ProjectNavigationDataTabDataNeedVerify,props.dataTab.id)
+  //监听通知
+  notificationMoniter([ProjectNavigationDataTabDataUpdate, ProjectNavigationDataTabDataVerify], (messageName: string, param?: unknown) => {
+    //收到通知执行页面的校验方法 一般是页面的保存或提交事件
+    if (messageName === ProjectNavigationDataTabDataVerify) {
+			//例如
+      onSave() //页面的保存或提交事件
+    }
+  });
+})
+```
+4.校验是否通过 发送校验成功或失败通知
+例如
+  ```html
+const onSave = () => {
+    isSubmit.value = !isSubmit.value
+    ruleFormRef.value?.validate((valid: boolean) => {
+        if (valid) {
+            saveObjection(objectionState.Form).then(() => {
+                ElMessage({
+                    message: "保存成功",
+                    type: "success"
+                });
+              postNotification(ProjectNavigationDataTabVerifySuccess,props.dataTab.id)
+                refresh.value = !refresh.value
+            }).catch(() => {
+              postNotification(ProjectNavigationDataTabVerifyFailure,props.dataTab.id)
+                refresh.value = !refresh.value
+            })
+        } else {
+          postNotification(ProjectNavigationDataTabVerifyFailure,props.dataTab.id)
+            refresh.value = !refresh.value
+        }
+    })
+};
+```
+
+## 6. 任务授权（工作交接）
+
+1. 创建任务授权
+对于已经产生的业务需要在任务授权功能增加A授权B
+使用第3步中的方法可以使A的待办将发送到B（流程待办状态变化会同步到第三方消息）
+授权时间加长可以跳过第2步
+
+2. 直接修改对应人员
+对于将来的业务需要修改以下数据：
+- 	业务人员需要修改业务表
+- 	流程角色需要修改关联人员
+- 	起草人需要修改流程起草人
+  ```java
+		   /**
+		     * 更新流程实例
+		     * @param wf_lcsl 
+		     * @return
+		     */
+		    String updateProcess(Wf_lcsl wf_lcsl);
+   ```
+
+1. 进行中的待办
+- 可以调用接口WorkFlowFacade
+  ```java
+	    /**
+	     * 重新生成流程进行中任务执行人
+	     * @param bizid 流程业务id
+	     * @return
+	     */
+	    String updateActor(String bizid)
+  ```
+- 创建任务授权可以等待定时任务更新
+
+1. 未进行的任务
+未进行的任务会在创建待办时查询人员创建待办
+
+1. 定时任务
+```
+	/api/authentication/wf/support/processtimer/update-task-auth
+```
